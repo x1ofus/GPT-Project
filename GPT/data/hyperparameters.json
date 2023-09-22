@@ -1,0 +1,9 @@
+{
+    "batch_size" : 16,
+    "block_size" : 128,
+    "n_embd" : 128,
+    "n_head" : 6,
+    "n_layer" : 6,
+    "dropout" : 0.5,
+    "vocab_size" : 100255
+}
