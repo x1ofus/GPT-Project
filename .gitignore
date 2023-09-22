@@ -1,0 +1,10 @@
+.env
+
+*.pt
+*.pyc
+*.pyo
+*.spec
+
+/GPT/scripts/__pycache__/
+/build/
+/dist
