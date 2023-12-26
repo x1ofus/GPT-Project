@@ -1,32 +1,27 @@
-"""
-Gets dataset file and adds new entries to the master file
+""" Gets dataset file and adds new entries to the master file
 
 Uses DiscordMate browser plugin to get metadata from browser version of discord
 Give file path of the textfile as an argument to add new data the the master logs
 """
-def update_dataset():
+import json
+import sys
+import os
+
+def update_dataset(infileName, outfileName):
     
-    import json
-    import sys
-
-    if len(sys.argv) == 1:
-        print(sys.argv)
-        print("\nPlease run in the format: python(3) [.\\GPT\\scripts\\UpdateDataset.py] [updatefilepath.txt]\n")
-        exit()
-        
-    newLogsFile = sys.argv[1]
-
-    masterFile = open("GPT/data/masterdiscordlogs.json", encoding='utf-8')
+    # load the master file
+    masterFile = open("GPT/data/" + outfileName, encoding='utf-8')
     masterDataLog = json.load(masterFile)
 
+    # load the new file
     newLogsText = ""
-    with open(newLogsFile, "r", encoding='utf-8') as f:
+    with open("GPT/data/" + infileName, "r", encoding='utf-8') as f:
         newLogsText = f.read()
-        
     newDataLog = json.loads(newLogsText)
 
     # create a mapping for the new userIDs and indexes with the master values
     newIDToMasterID = {}
+    
     # look at all users in the new logs
     for newUserIndex, newUserID in enumerate(newDataLog["meta"]["userindex"]):
         if newUserID not in masterDataLog["meta"]["users"]: # if new user
@@ -38,7 +33,6 @@ def update_dataset():
         # set the mapping from the new index to the master index
         masterUserIndex = newDataLog["meta"]["userindex"].index(newUserID)
         newIDToMasterID[newUserIndex] = masterUserIndex
-        
 
     # read through each channel in the new logs
     for channelID in list(newDataLog["meta"]["channels"].keys()):
@@ -61,10 +55,28 @@ def update_dataset():
                 masterDataLog["data"][channelID][messageID] = data      # add the new log to the data
                 
     # dump onto the json file
-    with open("GPT/data/masterdiscordlogs.json", 'w', encoding='utf-8') as f:
+    with open("GPT/data/" + outfileName, 'w', encoding='utf-8') as f:
         json.dump(masterDataLog, f, ensure_ascii=False, indent=2)
 
     print("Updated dataset successfully")
 
+
+
 if __name__ == "__main__":
-    update_dataset()
+
+    if len(sys.argv) != 3:
+        print(sys.argv)
+        print("\nPlease run in the format: python(3) [.\\GPT\\scripts\\UpdateDataset.py] [newfilename.json] [masterfilename.json]\n")
+        exit()
+
+    # check if the infile exists
+    if not os.path.exists(sys.argv[1]):
+        print("\nInput file does not exist")
+        exit()
+    
+    # check if the infile exists
+    if not os.path.exists(sys.argv[2]):
+        print("\nMaster file does not exist")
+        exit()
+
+    update_dataset(sys.argv[1], sys.argv[2])

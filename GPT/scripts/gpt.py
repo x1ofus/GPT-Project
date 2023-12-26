@@ -1,6 +1,8 @@
 # NOTE: add tiktoken_ext package after building
 # ADD TO PYINSTALLER CALL: pyinstaller --onedir .\GPT\scripts\gpt.py --hidden-import=tiktoken_ext.openai_public --hidden-import=tiktoken_ext --noconfirm
 
+# [INCOMPLETE] Central program for calling each process
+
 import sys
 import subprocess
 import os
