@@ -21,7 +21,7 @@ def update_dataset(infileName, outfileName):
 
     # create a mapping for the new userIDs and indexes with the master values
     newIDToMasterID = {}
-    
+
     # look at all users in the new logs
     for newUserIndex, newUserID in enumerate(newDataLog["meta"]["userindex"]):
         if newUserID not in masterDataLog["meta"]["users"]: # if new user
@@ -70,12 +70,12 @@ if __name__ == "__main__":
         exit()
 
     # check if the infile exists
-    if not os.path.exists(sys.argv[1]):
+    if not os.path.exists("GPT/data/" + sys.argv[1]):
         print("\nInput file does not exist")
         exit()
     
     # check if the infile exists
-    if not os.path.exists(sys.argv[2]):
+    if not os.path.exists("GPT/data/" + sys.argv[2]):
         print("\nMaster file does not exist")
         exit()
 

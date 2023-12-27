@@ -1,32 +1,34 @@
-def build():
-    import torch
-    import torch.nn as nn
-    from torch.nn import functional as F
-    from Model import GPTLanguageModel
-    from Model import block_size, batch_size, device
-    from datetime import datetime
+"""Building script for the model
 
-    #from lightning import Fabric
-    import matplotlib.pyplot as plt
+Uses PyTorch to build a generative model based on the given dataset text file. 
+"""
 
-    import tiktoken
-    import time
+import torch
+import torch.nn as nn
+from torch.nn import functional as F
+from Model import GPTLanguageModel
+from Model import block_size, batch_size, device
+from datetime import datetime
+from lightning import Fabric
+import matplotlib.pyplot as plt
+import tiktoken
+import time
+from pymongo import MongoClient
+import certifi
+import gridfs
+import os
+import sys
+from dotenv import find_dotenv, load_dotenv
 
-    from pymongo import MongoClient
-    import certifi
-    import gridfs
 
-    import os
-    from dotenv import find_dotenv, load_dotenv
-
+def build(datasetfileName, modelName, showPlot=False):
     start = time.time()
 
     precision = "bf16-true" if torch.cuda.is_bf16_supported() else "16-mixed"
-    print(precision)
-    #precision = "16-mixed"
 
-    # fabric = Fabric(accelerator="cuda", precision=precision)
-    # fabric.launch()
+    # set up fabric
+    fabric = Fabric(accelerator="cuda", precision=precision)
+    fabric.launch()
 
     # hyper parameters for training
     learning_rate = 3e-4    # learning rate
@@ -44,11 +46,11 @@ def build():
         x, y = x.to(device), y.to(device)
         return x, y
 
+    # loss function
     @torch.no_grad()
     def estimate_loss():
         out = {}
         model.eval()    # set status to evaluating
-        # 
         for split in ['train', 'val']:
             losses = torch.zeros(eval_iters)
             for k in range(eval_iters):
@@ -59,9 +61,9 @@ def build():
             out[split] = losses.mean()
         model.train()   # set status to training
         return out
-
+    
     # get the text from the dataset text file
-    with open("GPT/data/dataset-userless.txt", "r", encoding='utf-8') as f:
+    with open("GPT/data/" + datasetfileName, "r", encoding='utf-8') as f:
         text = f.read()
 
     # create tokens from the text
@@ -85,7 +87,8 @@ def build():
     # create a PyTorch optimizer
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=4e-6)
 
-    #model, optimizer = fabric.setup(model, optimizer)
+    model, optimizer = fabric.setup(model, optimizer)
+
     train_losses = []
     val_losses = []
     accuracies = []
@@ -106,8 +109,7 @@ def build():
         
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
-        
-        # fabric.backward(loss)
+        fabric.backward(loss)
         optimizer.step()        
         
     # evaluate time to run
@@ -115,30 +117,28 @@ def build():
     print(end - start)
 
     # plot graph
-    plt.plot(train_losses)
-    plt.plot(val_losses)
-    plt.title('Loss Graph')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    #plt.show()
+    if showPlot:
+        plt.plot(train_losses)
+        plt.plot(val_losses)
+        plt.title('Loss Graph')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.show()
 
     # SAVE MODEL
-    PATH = "GPT/model/model.pt"
+    PATH = "GPT/model/" + modelName + ".pt"
     torch.save(model.state_dict(), PATH)
 
-    # dotenv_path = find_dotenv()
-    # load_dotenv(dotenv_path)
-
-    # CONNECTION_STRING = f"mongodb+srv://{os.getenv('USER')}:{os.getenv('PASS')}@gptdb.wfjvhng.mongodb.net/?retryWrites=true&w=majority"
-    # client = MongoClient(CONNECTION_STRING, tlsCAFile=certifi.where())
-    # client.drop_database('Models')
-    # db = client['Models']
-
-    # file_data = open(PATH, "rb")
-    # data = file_data.read()
-
-    # fs = gridfs.GridFS(db)
-    # fs.put(data, filename='Model1')
-
 if __name__ == "__main__":
-    build()
+
+    # check if command is in right format
+    if len(sys.argv) < 3:
+        print("\nPlease run in the format: python(3) [.\\GPT\\scripts\\BuildModel.py] [datasetfileName.txt] [ModelName]\n")
+        exit()
+    
+    # check if the dataset exists
+    if not os.path.exists("GPT/data/" + sys.argv[1]):
+        print("\nDataset does not exist")
+        exit()
+
+    build(sys.argv[1], sys.argv[2], showPlot= "-p" in sys.argv)

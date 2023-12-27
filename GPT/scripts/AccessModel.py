@@ -1,41 +1,26 @@
-def access_model():
-    
-    from Model import GPTLanguageModel
-    from Model import device
-    import tiktoken
-    import torch
-    import time
-    import random
+"""Access the model and generate new discord messages
 
-    from pymongo import MongoClient
-    import certifi
-    import gridfs
+Generates lines using the model and pauses between lines for some time.
+"""
 
-    import os
-    from dotenv import find_dotenv, load_dotenv
+from Model import GPTLanguageModel
+from Model import device
 
-    dotenv_path = find_dotenv()
-    load_dotenv(dotenv_path)
-    CONNECTION_STRING = f"mongodb+srv://{os.getenv('USER')}:{os.getenv('PASS')}@gptdb.wfjvhng.mongodb.net/?retryWrites=true&w=majority"
+import torch
+import time
+import random
+import os
+import sys
 
-    client = MongoClient(CONNECTION_STRING, tlsCAFile=certifi.where())
-    db = client['Models']
-    fs = gridfs.GridFS(db)
+def access_model(modelName):
 
-    data = db.fs.files.find_one({'filename':'Model1'})
-    print(data)
-    my_id = data['_id']
-    outputdata = fs.get(my_id).read()
-    PATH = "GPT/model/model.pt"
-    output = open(PATH, "wb")
-    output.write(outputdata)
-    output.close()
+    # write to model file
+    PATH = "GPT/model/" + modelName + ".pt"
 
     # load in model from file
     model = GPTLanguageModel().to(device)
     model.load_state_dict(torch.load(PATH))
-
-        
+  
     # generate from the model
     # model.eval()
     context = torch.zeros((1, 1), dtype=torch.long, device=device)
@@ -45,9 +30,17 @@ def access_model():
         output, context = model.generate_line(context)
         print(output)
         time.sleep(1 + random.randint(0, 100) / 100)
-        
-    #print(encoder.decode(model.generate(context, max_new_tokens=500)[0].tolist()))
-    #open('output.txt', 'w', encoding='utf-8').write(encoder.decode(model.generate(context, max_new_tokens=10000)[0].tolist()))
+    
 
 if __name__ == "__main__":
-    access_model()
+    # check if command is in right format
+    if len(sys.argv) != 2:
+        print("\nPlease run in the format: python(3) [.\\GPT\\scripts\\AccessModel.py] [ModelName]\n")
+        exit()
+
+    # check if the model exists
+    if not os.path.exists("GPT/model/" + sys.argv[1] + ".pt"):
+        print("\nModel does not exist")
+        exit()
+
+    access_model(sys.argv[1])

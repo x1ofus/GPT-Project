@@ -72,7 +72,7 @@ if __name__ == "__main__":
         exit()
     
     # check if the infile exists
-    if not os.path.exists(sys.argv[1]):
+    if not os.path.exists("GPT/data/" + sys.argv[1]):
         print("\nInput file does not exist")
         exit()
 
