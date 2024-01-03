@@ -1,3 +1,7 @@
+""" 
+Hyperparamters for the specifications of the model. Update if you run into VRAM 
+problems or want to change the size of the model to better fit the dataset.
+"""
 {
     "batch_size" : 16,
     "block_size" : 128,
