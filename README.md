@@ -41,9 +41,9 @@ The can read and create a dataset from discord log data using the [DiscordMate](
 ### DataParser.py
 Uses the data from the json file and generates the text file dataset using only the messages. The images are removed and the names of the users replace the IDs from the raw data.
 
-`python(3) .\\GPT\\scripts\\DataParser.py [infile.json] [outfile.txt]`
+`python(3) .\GPT\scripts\DataParser.py [infile.json] [outfile.txt]`
 
 ### UpdateDataset.py
 To allow users to update the discord message logs, this script is used to combine two json objects into one. It checks to see if there are new logs and adds them to the main object. 
 
-`python(3) .\\GPT\\scripts\\UpdateDataset.py [newfilename.json] [masterfilename.json]`
+`python(3) .\GPT\scripts\UpdateDataset.py [newfilename.json] [masterfilename.json]`
